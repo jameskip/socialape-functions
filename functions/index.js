@@ -1,7 +1,7 @@
 const functions = require('firebase-functions')
 const app = require('express')()
 
-const { signup, login, FBAuth, uploadImage } = require('./handlers/users')
+const { signup, login, FBAuth, uploadImage, updateUserDetails } = require('./handlers/users')
 const { getAllScreams, createScream } = require('./handlers/screams')
 
 // Routes
@@ -11,5 +11,6 @@ app.post('/scream', FBAuth, createScream)
 app.post('/signup', signup)
 app.post('/login', login)
 app.post('/user/image', FBAuth, uploadImage)
+app.post('/user', FBAuth, updateUserDetails)
 
 exports.api = functions.https.onRequest(app)

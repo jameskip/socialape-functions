@@ -1,5 +1,6 @@
 const firebase = require('firebase')
 const { db, admin } = require('../util/admin')
+const { isEmpty, isValidEmail, isValidPassword, reduceUserDetails } = require('../util/validators')
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCThbLv30frPmVA6qHELYQgGn81lIa58f0',
@@ -12,11 +13,6 @@ const firebaseConfig = {
   measurementId: 'G-N90ECF1FNG'
 }
 firebase.initializeApp(firebaseConfig)
-
-// Validation helper functions
-const isEmpty = string => string.trim() === '' ? true : false
-const isValidEmail = email => email.match(/^(([^<>()[\]\\.,;:\s@']+(\.[^<>()[\]\\.,;:\s@']+)*)|('.+'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/) ? true : false
-const isValidPassword = password => password.length >= 8
 
 // Firebase authentication middleware
 exports.FBAuth = (request, response, next) => {
@@ -113,6 +109,18 @@ exports.login = (request, response) => {
     })
 }
 
+exports.updateUserDetails = (request, response) => {
+  const userDetails = reduceUserDetails(request.body)
+
+  db.doc(`/users/${request.user.handle}`)
+    .update(userDetails)
+    .then(() => response.json({ message: 'Details saved successfuly' }))
+    .catch((error) => {
+      console.error(error)
+      response.status(500).json({ error: error.code })
+    })
+}
+
 exports.uploadImage = (request, response) => {
   const BusBoy = require('busboy')
   const path = require('path')
@@ -125,7 +133,8 @@ exports.uploadImage = (request, response) => {
   let imageToBeUploaded
 
   busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-    console.log({ fieldname, filename, mimetype })
+    if (mimetype !== 'image/jpeg' && mimetype !== 'image/png') response.status(500).json({ error: 'Must be image type.' })
+
     const imageExtension = filename.split('.')[filename.split('.').length - 1]
     imageFileName = `${Math.round(Math.random() * 10000000)}.${imageExtension}`
     const filepath = path.join(os.tmpdir(), imageFileName)
@@ -146,12 +155,8 @@ exports.uploadImage = (request, response) => {
         const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${imageFileName}?alt=media`
         return db.doc(`/users/${request.user.handle}`).update({ imageUrl })
       })
-      .then(() => {
-        return response.json({ message: 'Image uploaded successfuly!' })
-      })
-      .catch((error) => {
-        return response.status(500).json({ error: error.code })
-      })
+      .then(() => response.json({ message: 'Image uploaded successfuly!' }))
+      .catch((error) => response.status(500).json({ error: error.code }))
   })
 
   busboy.end(request.rawBody)

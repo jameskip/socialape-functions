@@ -20,5 +20,28 @@ let db = {
       likeCount: 5,
       commentCount: 2
     }
+  ],
+
+  comments: [
+    {
+      userHandle: 'user',
+      screamId: 'oeijaoe829e203r20u3r',
+      body: 'nice one!',
+      createdAt: '2019-xxx=xxx-xx'
+    }
   ]
+}
+
+const userDetails = {
+  // Redux data
+  credentials: {
+    userId :'jeowiejfwf3833',
+    email: 'user@email.com',
+    handle: 'user',
+    createdAt: '2019-399-3993-',
+    imageUrl: 'image/poopiepants',
+    bio: 'Hi, I\'m a nice guy.',
+    website: 'poop.com',
+    location: 'London, UK'
+  }
 }

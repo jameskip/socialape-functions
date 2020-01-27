@@ -33,3 +33,28 @@ exports.createScream = (request, response) => {
     .then(doc => response.json({ message: `Document ${doc.id} created successfully!` }))
     .catch(error => response.status(500).json({ error: `Something went wrong! :(` }))
 }
+
+exports.getScream = (request, response) => {
+  let screamData = {}
+  db.doc(`/screams/${request.params.screamId}`).get()
+    .then(doc => {
+      if (!doc.exists) {
+        return response.status(404).json({message: 'Scream not found'})
+      }
+      screamData = doc.data()
+      screamData.screamID = doc.id
+      return db.collection('comments').orderBy('createdAt', 'desc').where('screamId', '==', request.params.screamId).get()
+    })
+    .then(data => {
+      screamData.comments = []
+      data.forEach(doc => {
+        screamData.comments.push(doc.data())
+      })
+      return response.json(screamData)
+    })
+    .catch(error => {
+      console.error(error)
+      response.status(500).json({message: error.code})
+    })
+
+}

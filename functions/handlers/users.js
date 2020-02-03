@@ -25,10 +25,11 @@ exports.FBAuth = (request, response, next) => {
   if (
     request.headers.authorization &&
     request.headers.authorization.startsWith("Bearer ")
-  )
+  ) {
     idToken = request.headers.authorization.split("Bearer ")[1];
-  else response.status(403).json({ error: "Unauthorized" });
-
+  } else {
+    response.status(403).json({ error: "Unauthorized" });
+  }
   admin
     .auth()
     .verifyIdToken(idToken)
@@ -58,19 +59,27 @@ exports.signup = (request, response) => {
     handle: request.body.handle
   };
 
-  // Validate
+  // Validate user input
   let errors = {};
-  if (isEmpty(newUser.email)) errors.email = "Must not be empty.";
-  else if (!isValidEmail(newUser.email))
+  if (isEmpty(newUser.email)) {
+    errors.email = "Must not be empty.";
+  } else if (!isValidEmail(newUser.email)) {
     errors.email = "Must be a valid email address.";
-  if (isEmpty(newUser.password)) errors.password = "Must not be empty";
-  else if (!isValidPassword(newUser.password))
+  }
+  if (isEmpty(newUser.password)) {
+    errors.password = "Must not be empty";
+  } else if (!isValidPassword(newUser.password)) {
     errors.password = "Must have 8 or more characters";
-  if (newUser.password !== newUser.confirmPassword)
+  }
+  if (newUser.password !== newUser.confirmPassword) {
     errors.confirmPassword = "Passwords must match";
-  if (isEmpty(newUser.handle)) errors.handle = "Must not be empty";
-
-  if (Object.keys(errors).length > 0) response.status(400).json({ errors });
+  }
+  if (isEmpty(newUser.handle)) {
+    errors.handle = "Must not be empty";
+  }
+  if (Object.keys(errors).length > 0) {
+    response.status(400).json({ errors });
+  }
 
   const noImg = "default-profile.png";
 
@@ -105,9 +114,11 @@ exports.signup = (request, response) => {
     })
     .then(() => response.status(201).json({ token }))
     .catch(error => {
-      if (error.code === "auth/email-already-in-use")
+      if (error.code === "auth/email-already-in-use") {
         response.status(400).json({ email: "Email is already in use." });
-      else response.status(500).json({ error: error.code });
+      } else {
+        response.status(500).json({ error: error.code });
+      }
     });
 };
 
@@ -119,13 +130,19 @@ exports.login = (request, response) => {
 
   // Validate user credentials
   let errors = {};
-  if (isEmpty(user.email)) errors.email = "Must not be empty";
-  else if (!isValidEmail(user.email)) errors.email = "Must be valid";
-  if (isEmpty(user.password)) errors.password = "Must not be empty";
-  else if (!isValidPassword(user.password))
+  if (isEmpty(user.email)) {
+    errors.email = "Must not be empty";
+  } else if (!isValidEmail(user.email)) {
+    errors.email = "Must be valid";
+  }
+  if (isEmpty(user.password)) {
+    errors.password = "Must not be empty";
+  } else if (!isValidPassword(user.password)) {
     errors.password = "Must have 8 or more characters";
-
-  if (Object.keys(errors).length > 0) response.status(400).json({ errors });
+  }
+  if (Object.keys(errors).length > 0) {
+    response.status(400).json({ errors });
+  }
 
   firebase
     .auth()
@@ -133,11 +150,13 @@ exports.login = (request, response) => {
     .then(data => data.user.getIdToken())
     .then(token => response.json({ token }))
     .catch(error => {
-      if (error.code === "auth/wrong-password")
+      if (error.code === "auth/wrong-password") {
         response
           .status(403)
           .json({ general: "Wrong credentials, please try again." });
-      else response.status(400).json({ error: error.code });
+      } else {
+        response.status(400).json({ error: error.code });
+      }
     });
 };
 
@@ -190,8 +209,9 @@ exports.uploadImage = (request, response) => {
   let imageToBeUploaded;
 
   busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
-    if (mimetype !== "image/jpeg" && mimetype !== "image/png")
+    if (mimetype !== "image/jpeg" && mimetype !== "image/png") {
       response.status(500).json({ error: "Must be image type." });
+    }
 
     const imageExtension = filename.split(".")[filename.split(".").length - 1];
     imageFileName = `${Math.round(Math.random() * 10000000)}.${imageExtension}`;

@@ -20,8 +20,9 @@ exports.getAllScreams = (request, response) => {
 };
 
 exports.createScream = (request, response) => {
-  if (request.body.body.trim() === "")
-    response.status(400).json({ error: "Body must not be empty" });
+  if (request.body.body.trim() === "") {
+    return response.status(400).json({ error: "Body must not be empty" });
+  }
 
   const newScream = {
     body: request.body.body,
@@ -69,7 +70,9 @@ exports.getScream = (request, response) => {
 };
 
 exports.commentOnScream = (request, response) => {
-  if (request.body.body.trim() === '') response.status('400').json({error: 'Must not be empty'})
+  if (request.body.body.trim() === "") {
+    return response.status("400").json({ error: "Must not be empty" });
+  }
 
   const newComment = {
     userHandle: request.user.handle,
@@ -77,20 +80,21 @@ exports.commentOnScream = (request, response) => {
     screamId: request.params.screamId,
     body: request.body.body,
     createdAt: new Date().toISOString()
-  }
+  };
 
-  console.log(newComment)
+  console.log(newComment);
 
-  db.doc(`/screams/${request.params.screamId}`).get()
+  db.doc(`/screams/${request.params.screamId}`)
+    .get()
     .then(doc => {
-      if(!doc.exists) {
-        return response.status(404).json({error: 'Scream not found'})
-      } 
-      return db.collection('comments').add(newComment)
+      if (!doc.exists) {
+        return response.status(404).json({ error: "Scream not found" });
+      }
+      return db.collection("comments").add(newComment);
     })
     .then(() => response.json(newComment))
     .catch(error => {
-      console.error(error)
-      response.status(500).json({error: 'Something went wrong!'})
-    })
-}
+      console.error(error);
+      response.status(500).json({ error: "Something went wrong!" });
+    });
+};

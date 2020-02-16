@@ -65,7 +65,7 @@ exports.getScream = (request, response) => {
     })
     .catch(error => {
       console.error(error);
-      response.status(500).json({ message: error.code });
+      return response.status(500).json({ message: error.code });
     });
 };
 
@@ -95,6 +95,6 @@ exports.commentOnScream = (request, response) => {
     .then(() => response.json(newComment))
     .catch(error => {
       console.error(error);
-      response.status(500).json({ error: "Something went wrong!" });
+      return response.status(500).json({ error: "Something went wrong!" });
     });
 };

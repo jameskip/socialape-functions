@@ -115,9 +115,9 @@ exports.signup = (request, response) => {
     .then(() => response.status(201).json({ token }))
     .catch(error => {
       if (error.code === "auth/email-already-in-use") {
-        response.status(400).json({ email: "Email is already in use." });
+        return response.status(400).json({ email: "Email is already in use." });
       } else {
-        response.status(500).json({ error: error.code });
+        return response.status(500).json({ error: error.code });
       }
     });
 };
@@ -141,7 +141,7 @@ exports.login = (request, response) => {
     errors.password = "Must have 8 or more characters";
   }
   if (Object.keys(errors).length > 0) {
-    response.status(400).json({ errors });
+    return response.status(400).json({ errors });
   }
 
   firebase
@@ -151,11 +151,11 @@ exports.login = (request, response) => {
     .then(token => response.json({ token }))
     .catch(error => {
       if (error.code === "auth/wrong-password") {
-        response
+        return response
           .status(403)
           .json({ general: "Wrong credentials, please try again." });
       } else {
-        response.status(400).json({ error: error.code });
+        return response.status(400).json({ error: error.code });
       }
     });
 };
@@ -168,7 +168,7 @@ exports.updateUserDetails = (request, response) => {
     .then(() => response.json({ message: "Details saved successfuly" }))
     .catch(error => {
       console.error(error);
-      response.status(500).json({ error: error.code });
+      return response.status(500).json({ error: error.code });
     });
 };
 

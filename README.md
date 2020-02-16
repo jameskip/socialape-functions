@@ -19,6 +19,7 @@ To deploy functions to your localhost
 firebase serve
 ```
 
+### Deploy
 To deploy to Firebase
 ```bash
 firebase deploy

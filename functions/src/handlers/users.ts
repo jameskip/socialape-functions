@@ -62,7 +62,7 @@ interface ImageUp {
 }
 
 // Firebase authentication middleware
-exports.FBAuth = (req: any, res: any, next: any) => {
+exports.FBAuth = (req: IRequest, res: IResponse, next: Function) => {
   let idToken;
   if (
     req.headers.authorization &&

@@ -1,3 +1,4 @@
+export {};
 const firebase = require("firebase");
 const { db, admin } = require("../util/admin");
 const {
@@ -19,7 +20,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 
-interface Ibody {
+interface IBody {
   email: string;
   password: string;
   confirmPassword: string;
@@ -27,7 +28,7 @@ interface Ibody {
 }
 
 interface User {
-  body?: Ibody;
+  body?: IBody;
   uid?: string;
   handle?: string;
   imageUrl?: string;
@@ -39,20 +40,23 @@ interface IErrors {
   password?: string;
   confirmPassword?: string;
   handle?: string;
+  code?: string;
+  name?: string;
+  message?: string;
 }
 
 interface IRequest extends Express.Request {
   headers: {
     authorization: string;
   };
-  body: Ibody;
+  body: IBody;
   user: User;
   rawBody: string;
 }
 
 interface IResponse extends Express.Response {
   status: Function;
-  body: Ibody;
+  body: IBody;
   json: Function;
 }
 
@@ -102,7 +106,7 @@ exports.signup = (req: IRequest, res: IResponse) => {
   };
 
   // Validate user input
-  let errors: IErrors = {};
+  const errors: IErrors = {};
   if (isEmpty(newUser.email)) {
     errors.email = "Must not be empty.";
   } else if (!isValidEmail(newUser.email)) {
@@ -171,7 +175,7 @@ exports.login = (req: IRequest, res: IResponse) => {
   };
 
   // Validate user credentials
-  let errors: IErrors = {};
+  const errors: IErrors = {};
   if (isEmpty(user.email)) {
     errors.email = "Must not be empty";
   } else if (!isValidEmail(user.email)) {
@@ -215,7 +219,7 @@ exports.updateUserDetails = (req: IRequest, res: IResponse) => {
 };
 
 exports.getAuthenticatedUser = (req: IRequest, res: IResponse) => {
-  let userData: User = {};
+  const userData: User = {};
   db.doc(`/users/${req.user.handle}`)
     .get()
     .then((doc: User) => {

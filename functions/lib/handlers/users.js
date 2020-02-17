@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const firebase = require("firebase");
 const { db, admin } = require("../util/admin");
 const { isEmpty, isValidEmail, isValidPassword, reduceUserDetails } = require("../util/validators");
@@ -49,7 +50,7 @@ exports.signup = (req, res) => {
         handle: req.body.handle
     };
     // Validate user input
-    let errors = {};
+    const errors = {};
     if (isEmpty(newUser.email)) {
         errors.email = "Must not be empty.";
     }
@@ -118,7 +119,7 @@ exports.login = (req, res) => {
         password: req.body.password
     };
     // Validate user credentials
-    let errors = {};
+    const errors = {};
     if (isEmpty(user.email)) {
         errors.email = "Must not be empty";
     }
@@ -161,7 +162,7 @@ exports.updateUserDetails = (req, res) => {
     });
 };
 exports.getAuthenticatedUser = (req, res) => {
-    let userData = {};
+    const userData = {};
     db.doc(`/users/${req.user.handle}`)
         .get()
         .then((doc) => {

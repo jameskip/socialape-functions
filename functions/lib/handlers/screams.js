@@ -1,12 +1,12 @@
 "use strict";
 const { db } = require("../util/admin");
-exports.getAllScreams = (request, response) => {
+exports.getAllScreams = (req, res) => {
     db.collection("screams")
         .orderBy("createdAt", "desc")
         .get()
-        .then(data => {
+        .then((data) => {
         let screams = [];
-        data.forEach(doc => {
+        data.forEach((doc) => {
             screams.push({
                 screamId: doc.id,
                 body: doc.data().body,
@@ -14,79 +14,84 @@ exports.getAllScreams = (request, response) => {
                 createdAt: new Date().toISOString()
             });
         });
-        return response.json(screams);
+        return res.json(screams);
     })
-        .catch(error => response.status(400).json({ error: error.code }));
+        .catch((error) => res.status(400).json({ error: error.code }));
 };
-exports.createScream = (request, response) => {
-    if (request.body.body.trim() === "") {
-        return response.status(400).json({ error: "Body must not be empty" });
+exports.createScream = (req, res) => {
+    if (req.body.body.trim() === "") {
+        return res.status(400).json({ error: "Body must not be empty" });
     }
     const newScream = {
-        body: request.body.body,
-        userHandle: request.user.handle,
-        userImage: request.user.imageUrl,
+        body: req.body.body,
+        userHandle: req.user.handle,
+        userImage: req.user.imageUrl,
         createdAt: new Date().toISOString(),
         likeCount: 0,
-        commentCount: 0
+        commentCount: 0,
+        screamId: 0
     };
     db.collection("screams")
         .add(newScream)
-        .then(doc => response.json({ message: `Document ${doc.id} created successfully!` }))
-        .catch(error => response.status(500).json({ error: `Something went wrong! :(` }));
+        .then((doc) => {
+        const resScream = newScream;
+        resScream.screamId = doc.id;
+        return res.json(resScream);
+    })
+        .catch((error) => res.status(500).json({ error: `Something went wrong! :(` }));
 };
-exports.getScream = (request, response) => {
+exports.getScream = (req, res) => {
     let screamData = {};
-    db.doc(`/screams/${request.params.screamId}`)
+    db.doc(`/screams/${req.params.screamId}`)
         .get()
-        .then(doc => {
+        .then((doc) => {
         if (!doc.exists) {
-            return response.status(404).json({ message: "Scream not found" });
+            return res.status(404).json({ message: "Scream not found" });
         }
         screamData = doc.data();
         screamData.screamId = doc.id;
         return db
             .collection("comments")
             .orderBy("createdAt", "desc")
-            .where("screamId", "==", request.params.screamId)
+            .where("screamId", "==", req.params.screamId)
             .get();
     })
-        .then(data => {
+        .then((data) => {
         screamData.comments = [];
         data.forEach(doc => {
             screamData.comments.push(doc.data());
         });
-        return response.json(screamData);
+        return res.json(screamData);
     })
-        .catch(error => {
+        .catch((error) => {
         console.error(error);
-        return response.status(500).json({ message: error.code });
+        return res.status(500).json({ message: error.code });
     });
 };
-exports.commentOnScream = (request, response) => {
-    if (request.body.body.trim() === "") {
-        return response.status("400").json({ error: "Must not be empty" });
+exports.commentOnScream = (req, res) => {
+    if (req.body.body.trim() === "") {
+        return res.status("400").json({ error: "Must not be empty" });
     }
     const newComment = {
-        userHandle: request.user.handle,
-        userImage: request.user.imageUrl,
-        screamId: request.params.screamId,
-        body: request.body.body,
+        userHandle: req.user.handle,
+        userImage: req.user.imageUrl,
+        screamId: req.params.screamId,
+        body: req.body.body,
         createdAt: new Date().toISOString()
     };
     console.log(newComment);
-    db.doc(`/screams/${request.params.screamId}`)
+    db.doc(`/screams/${req.params.screamId}`)
         .get()
-        .then(doc => {
+        .then((doc) => {
         if (!doc.exists) {
-            return response.status(404).json({ error: "Scream not found" });
+            return res.status(404).json({ error: "Scream not found" });
         }
         return db.collection("comments").add(newComment);
     })
-        .then(() => response.json(newComment))
-        .catch(error => {
+        .then(() => res.json(newComment))
+        .catch((error) => {
         console.error(error);
-        return response.status(500).json({ error: "Something went wrong!" });
+        return res.status(500).json({ error: "Something went wrong!" });
     });
 };
 //# sourceMappingURL=screams.js.map

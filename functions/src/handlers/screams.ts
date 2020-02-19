@@ -152,3 +152,42 @@ exports.commentOnScream = (req: IRequest, res: IResponse) => {
       return res.status(500).json({ error: "Something went wrong!" });
     });
 };
+
+// exports.likeScream = (req: IRequest, res: IResponse) => {
+//   const screamRef = db.collection(`/screams/${req.params.screamId}`);
+//   console.log(screamRef);
+
+//   screamRef
+//     .update({
+//       likeCount: FieldValue.increment(1)
+//     })
+//     .then(function() {
+//       console.log("Document successfully updated!");
+//     })
+//     .catch(function(error: Error) {
+//       // The document probably doesn't exist.
+//       console.error("Error updating document: ", error);
+//     });
+// };
+
+exports.likeScream = (req: IRequest, res: IResponse) => {
+  const docRef = db.doc(`/screams/${req.params.screamId}`);
+
+  return db.runTransaction((transaction: any) => {
+    return transaction
+      .get(docRef)
+      .then((doc: any) => {
+        if (!doc.exists) {
+          return res.status(404).json({ error: "Scream not found" });
+        }
+        const newLikeCount = doc.data().likeCount + 1;
+        transaction.update(docRef, { likeCount: newLikeCount });
+      })
+      .then(() => {
+        res.status(200).json("Like count updated!");
+      })
+      .catch((error: Error) => {
+        res.status(500).json({ error });
+      });
+  });
+};

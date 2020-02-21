@@ -23,7 +23,7 @@ app.get("/screams", getAllScreams);
 app.post("/scream", FBAuth, createScream);
 app.get("/scream/:screamId", getScream);
 // TODO: delete scream
-app.post("/scream/:screamId/like", likeScream);
+app.post("/scream/:screamId/like", FBAuth, likeScream);
 // TODO: unlike a scream
 app.post("/scream/:screamId/comment", FBAuth, commentOnScream);
 

@@ -13,7 +13,6 @@ interface User {
   uid?: string;
   handle?: string;
   imageUrl?: string;
-  [propName: string]: any;
 }
 
 interface IRequest extends Express.Request {
@@ -23,7 +22,7 @@ interface IRequest extends Express.Request {
   body: IBody;
   user: User;
   rawBody: string;
-  params: { screamId: string };
+  params: { screamId: string; handle: string };
 }
 
 interface IResponse extends Express.Response {
@@ -43,8 +42,9 @@ interface IErrors {
 interface Scream {
   id: number;
   data: Function;
+  [propName: string]: any;
   exists: boolean;
-  screamId?: number;
+  screamId?: string;
   userHandle?: string;
   userImage?: string;
   comments: string[];
@@ -153,41 +153,52 @@ exports.commentOnScream = (req: IRequest, res: IResponse) => {
     });
 };
 
-// exports.likeScream = (req: IRequest, res: IResponse) => {
-//   const screamRef = db.collection(`/screams/${req.params.screamId}`);
-//   console.log(screamRef);
-
-//   screamRef
-//     .update({
-//       likeCount: FieldValue.increment(1)
-//     })
-//     .then(function() {
-//       console.log("Document successfully updated!");
-//     })
-//     .catch(function(error: Error) {
-//       // The document probably doesn't exist.
-//       console.error("Error updating document: ", error);
-//     });
-// };
-
 exports.likeScream = (req: IRequest, res: IResponse) => {
-  const docRef = db.doc(`/screams/${req.params.screamId}`);
+  const likeDocument = db
+    .collection("likes")
+    .where("userHandle", "==", req.user.handle)
+    .where("screamId", "==", req.params.screamId)
+    .limit(1);
 
-  return db.runTransaction((transaction: any) => {
-    return transaction
-      .get(docRef)
-      .then((doc: any) => {
-        if (!doc.exists) {
-          return res.status(404).json({ error: "Scream not found" });
-        }
-        const newLikeCount = doc.data().likeCount + 1;
-        transaction.update(docRef, { likeCount: newLikeCount });
-      })
-      .then(() => {
-        res.status(200).json("Like count updated!");
-      })
-      .catch((error: Error) => {
-        res.status(500).json({ error });
-      });
-  });
+  const screamDocument = db.doc(`/screams/${req.params.screamId}`);
+
+  let screamData: {
+    screamId: number;
+    likeCount: number;
+  };
+
+  screamDocument
+    .get()
+    .then((doc: Scream) => {
+      if (doc.exists) {
+        screamData = doc.data();
+        screamData.screamId = doc.id;
+        return likeDocument.get();
+      } else {
+        return res.status(404).message({ message: "Scream not found" });
+      }
+    })
+    .then((data: Scream) => {
+      if (data.empty) {
+        return db
+          .collection("likes")
+          .add({
+            screamId: req.params.screamId,
+            userHandle: req.user.handle
+          })
+          .then(() => {
+            screamData.likeCount++;
+            return screamDocument.update({ likeCount: screamData.likeCount });
+          })
+          .then(() => {
+            return res.json(screamData);
+          });
+      } else {
+        return res.status(400).json({ error: "Scream alread liked" });
+      }
+    })
+    .catch((error: IErrors) => {
+      console.error(error);
+      res.status(500).json({ error: error.code });
+    });
 };
